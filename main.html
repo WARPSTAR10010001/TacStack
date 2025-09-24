@@ -23,18 +23,23 @@
             </div>
             <div id="settings-container">
                 <h1 id="settings-title">Settings</h1>
+                <p id="settings-playWithAi">Play with AI:<button id="playWithAi-btn" class="inline-btn">Off</button></p>
+                <p id="settings-aiLevel" style="display: none;">AI Enemy Level:<button id="aiLevel-btn" class="inline-btn">Easy</button></p>
+                <p id="settings-startingPlayer">Starting Player:<button id="startingPlayer-btn" class="inline-btn">Player 1</button></p>
+                <p id="settings-playerOneName">Player 1 Name:<input id="playerOneName-input" type="text" placeholder="Player 1"></p>
+                <p id="settings-playerTwoName">Player 2 Name:<input id="playerTwoName-input" type="text" placeholder="Player 2"></p>
                 <button id="settings-button">Save Settings</button>
             </div>
-            <div id="game-container">
-                <div class="box" data-pos-x="1" data-pos-y="1"></div>
-                <div class="box" data-pos-x="1" data-pos-y="2"></div>
-                <div class="box" data-pos-x="1" data-pos-y="3"></div>
-                <div class="box" data-pos-x="2" data-pos-y="1"></div>
-                <div class="box" data-pos-x="2" data-pos-y="2"></div>
-                <div class="box" data-pos-x="2" data-pos-y="3"></div>
-                <div class="box" data-pos-x="3" data-pos-y="1"></div>
-                <div class="box" data-pos-x="3" data-pos-y="2"></div>
-                <div class="box" data-pos-x="3" data-pos-y="3"></div>
+            <div id="game-container" style="display: none">
+                <div class="box" id="11"></div>
+                <div class="box" id="12"></div>
+                <div class="box" id="13"></div>
+                <div class="box" id="21"></div>
+                <div class="box" id="22"></div>
+                <div class="box" id="23"></div>
+                <div class="box" id="31"></div>
+                <div class="box" id="32"></div>
+                <div class="box" id="33"></div>
             </div>
         </div>
     </div>

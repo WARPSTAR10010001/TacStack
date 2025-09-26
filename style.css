@@ -115,3 +115,7 @@ button:hover {
     background-color: #fff;
     color: #97acec;
 }
+
+#turn {
+    margin-top: 10px;
+}

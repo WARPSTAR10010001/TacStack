@@ -12,6 +12,7 @@ let gameInfo = {
     currentTurn: null
 };
 gameInfo.currentTurn = gameInfo.startingPlayer;
+turnUpdate();
 let field = {
     11: null,
     12: null,
@@ -22,12 +23,12 @@ let field = {
     31: null,
     32: null,
     33: null
-}; // use this to make system more robust against cheats
+};
 
 for (let i = 1; i <= 3; i++) {
     for (let j = 1; j <= 3; j++) {
         let id = i * 10 + j;
-        document.getElementById(id).addEventListener(("click"), claimBox(id, gameInfo.currentTurn));
+        document.getElementById(id).addEventListener(("click"), () => claimBox(id));
     }
 }
 
@@ -74,9 +75,11 @@ document.getElementById("startingPlayer-btn").addEventListener(("click"), () => 
         if (gameInfo.aiEnemy === true) {
             document.getElementById("startingPlayer-btn").innerText = "AI";
             gameInfo.startingPlayer = 0;
+            gameInfo.currentTurn = gameInfo.startingPlayer;
         } else {
             document.getElementById("startingPlayer-btn").innerText = gameInfo.playerTwoName;
             gameInfo.startingPlayer = 2;
+            gameInfo.currentTurn = gameInfo.startingPlayer;
         }
     } else {
         document.getElementById("startingPlayer-btn").innerText = gameInfo.playerOneName;
@@ -121,6 +124,7 @@ document.getElementById("playerTwoName-input").addEventListener(("input"), (e) =
 })
 
 function showOverlay(state, title, msg, btn) {
+    game.style.display = "none";
     overlay.style.display = "block";
     document.getElementById("overlay-button-secondary").style.display = "none";
     document.getElementById("overlay-title").innerText = title;
@@ -152,30 +156,128 @@ function showOverlay(state, title, msg, btn) {
     })
 }
 
-function claimBox(id, player) {
+function claimBox(id) {
     if (gameInfo.firstTurn) {
         gameInfo.firstTurn = false;
-        if (player === 1) {
+        if (gameInfo.currentTurn === 1) {
             document.getElementById(id).innerText = "X";
+            Object.defineProperty(field, id, { value: "X" });
+
+            if (gameInfo.aiEnemy === true) {
+                setTimeout(() => aiTurn(), 2000);
+            }
         } else {
             document.getElementById(id).innerText = "O";
+            Object.defineProperty(field, id, { value: "O" });
         }
     } else {
-        if (document.getElementById(id).innerText !== "") {
-            if (player === 1) {
+        if (field[id] === null && gameInfo.currentTurn !== 0) {
+            if (gameInfo.currentTurn === 1) {
                 document.getElementById(id).innerText = "X";
+                Object.defineProperty(field, id, { value: "X" });
+
+                if (gameInfo.aiEnemy === true) {
+                setTimeout(() => aiTurn(), 2000);
+            }
             } else {
                 document.getElementById(id).innerText = "O";
+                Object.defineProperty(field, id, { value: "O" });
             }
+        }
+    }
+
+    if (checkWin() === false && gameInfo.aiEnemy === false) {
+        if (gameInfo.currentTurn === 1) {
+            gameInfo.currentTurn = 2;
+            turnUpdate();
+        } else {
+            gameInfo.currentTurn = 1;
+            turnUpdate();
         }
     }
 }
 
-function checkWin(player) {}
+function aiTurn() {
+    gameInfo.currentTurn = 0;
+    turnUpdate();
 
-function idToPos(id) {
-    return {
-        x: id % 10,
-        y: Math.trunc(id / 10)
+    
+
+    gameInfo.currentTurn = 1;
+}
+
+function checkWin() {
+    if (field[11] && field[12] && field[13] === "X" || field[11] && field[12] && field[13] === "O") {
+        showWinMsg();
+        return true;
+    } else if (field[21] && field[22] && field[23] === "X" || field[21] && field[22] && field[23] === "O") {
+        showWinMsg();
+        return true;
+    } else if (field[31] && field[32] && field[33] === "X" || field[31] && field[32] && field[33] === "O") {
+        showWinMsg();
+        return true;
+    } else if (field[11] && field[21] && field[31] === "X" || field[11] && field[21] && field[31] === "O") {
+        showWinMsg();
+        return true;
+    } else if (field[12] && field[22] && field[32] === "X" || field[12] && field[22] && field[32] === "O") {
+        showWinMsg();
+        return true;
+    } else if (field[13] && field[23] && field[33] === "X" || field[13] && field[23] && field[33] === "O") {
+        showWinMsg();
+        return true;
+    } else if (field[11] && field[22] && field[33] === "X" || field[11] && field[22] && field[33] === "O") {
+        showWinMsg();
+        return true;
+    } else if (field[13] && field[22] && field[31] === "X" || field[13] && field[22] && field[31] === "O") {
+        showWinMsg();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function showWinMsg() {
+    resetGame();
+    if (gameInfo.currentTurn === 1) {
+        showOverlay("end", "We have a winner!", `Congratulations, ${gameInfo.playerOneName}! You won!`);
+    } else if (gameInfo.currentTurn === 2) {
+        showOverlay("end", "We have a winner!", `Congratulations, ${gameInfo.playerTwoName}! You won!`);
+    } else {
+        showOverlay("end", "You lost!", "The TacStack AI won! Good luck next time!");
+    }
+}
+
+function turnUpdate() {
+    document.getElementById("turn").innerText = `Current Turn: ${turnNumToPlayer(gameInfo.currentTurn)}`;
+}
+
+function turnNumToPlayer(num) {
+    if (num === 0) {
+        return "TacStack AI";
+    } else if (num === 1) {
+        return gameInfo.playerOneName;
+    } else {
+        return gameInfo.playerTwoName;
+    }
+}
+
+function resetGame() {
+    field = {
+        11: null,
+        12: null,
+        13: null,
+        21: null,
+        22: null,
+        23: null,
+        31: null,
+        32: null,
+        33: null
     };
+
+    for (let i = 1; i <= 3; i++) {
+        for (let j = 1; j <= 3; j++) {
+            let id = i * 10 + j;
+            document.getElementById(id).innerText = "";
+        }
+    }
 }

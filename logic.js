@@ -2,143 +2,115 @@
 const overlay = document.getElementById("overlay-container");
 const game = document.getElementById("game-container");
 const settings = document.getElementById("settings-container");
+
 let gameInfo = {
     aiEnemy: false,
     aiLevel: 1,
-    startingPlayer: 1, // 1 is default, 0 is ai, 2 is other player
+    startingPlayer: 1, // 1 is default, 0 is AI, 2 is other player
     playerOneName: "Player 1",
     playerTwoName: "Player 2",
     firstTurn: true,
-    currentTurn: null
-};
-gameInfo.currentTurn = gameInfo.startingPlayer;
-turnUpdate();
-let field = {
-    11: null,
-    12: null,
-    13: null,
-    21: null,
-    22: null,
-    23: null,
-    31: null,
-    32: null,
-    33: null
+    currentTurn: 1
 };
 
+let field = {
+    11: null, 12: null, 13: null,
+    21: null, 22: null, 23: null,
+    31: null, 32: null, 33: null
+};
+
+// Attach click listeners for all cells
 for (let i = 1; i <= 3; i++) {
     for (let j = 1; j <= 3; j++) {
-        let id = i * 10 + j;
-        document.getElementById(id).addEventListener(("click"), () => claimBox(id));
+        const id = i * 10 + j;
+        document.getElementById(id).addEventListener("click", () => claimBox(id));
     }
 }
 
 showOverlay("welcome", "Welcome to TacStack", "TicTacToe but reimagined as a web-based game!", "Let's have fun!");
 
-document.getElementById("settings-button").addEventListener(("click"), () => {
+// Settings button
+document.getElementById("settings-button").addEventListener("click", () => {
     settings.style.display = "none";
     showOverlay("start", "Start a new game", "Click one of the buttons below to start a new game or change the current settings!", "Play TacStack");
-})
+});
 
-document.getElementById("playWithAi-btn").addEventListener(("click"), () => {
-    if (gameInfo.aiEnemy === true) {
-        document.getElementById("playWithAi-btn").innerText = "Off";
-        gameInfo.aiEnemy = false;
-        document.getElementById("settings-aiLevel").style.display = "none";
-        document.getElementById("settings-playerTwoName").style.display = "block";
-        document.getElementById("startingPlayer-btn").innerText = gameInfo.playerOneName;
-        gameInfo.startingPlayer = 1;
-    } else {
-        document.getElementById("playWithAi-btn").innerText = "On";
-        gameInfo.aiEnemy = true;
-        document.getElementById("settings-aiLevel").style.display = "block";
-        document.getElementById("settings-playerTwoName").style.display = "none";
-        document.getElementById("startingPlayer-btn").innerText = gameInfo.playerOneName;
-        gameInfo.startingPlayer = 1;
-    }
-})
+// Play with AI toggle
+document.getElementById("playWithAi-btn").addEventListener("click", () => {
+    gameInfo.aiEnemy = !gameInfo.aiEnemy;
+    document.getElementById("playWithAi-btn").innerText = gameInfo.aiEnemy ? "On" : "Off";
+    document.getElementById("settings-aiLevel").style.display = gameInfo.aiEnemy ? "block" : "none";
+    document.getElementById("settings-playerTwoName").style.display = gameInfo.aiEnemy ? "none" : "block";
+    gameInfo.startingPlayer = 1;
+    document.getElementById("startingPlayer-btn").innerText = gameInfo.playerOneName;
+    gameInfo.currentTurn = gameInfo.startingPlayer;
+    turnUpdate();
+});
 
-document.getElementById("aiLevel-btn").addEventListener(("click"), () => {
-    if (gameInfo.aiLevel === 1) {
-        document.getElementById("aiLevel-btn").innerText = "Medium";
-        gameInfo.aiLevel = 2;
-    } else if (gameInfo.aiLevel === 2) {
-        document.getElementById("aiLevel-btn").innerText = "Hard";
-        gameInfo.aiLevel = 3;
-    } else {
-        document.getElementById("aiLevel-btn").innerText = "Easy";
-        gameInfo.aiLevel = 1;
-    }
-})
+// AI Level cycle
+document.getElementById("aiLevel-btn").addEventListener("click", () => {
+    gameInfo.aiLevel = (gameInfo.aiLevel % 3) + 1;
+    const levelText = ["Easy", "Medium", "Hard"];
+    document.getElementById("aiLevel-btn").innerText = levelText[gameInfo.aiLevel - 1];
+});
 
-document.getElementById("startingPlayer-btn").addEventListener(("click"), () => {
+// Starting player toggle
+document.getElementById("startingPlayer-btn").addEventListener("click", () => {
     if (gameInfo.startingPlayer === 1) {
-        if (gameInfo.aiEnemy === true) {
-            document.getElementById("startingPlayer-btn").innerText = "AI";
+        if (gameInfo.aiEnemy) {
             gameInfo.startingPlayer = 0;
-            gameInfo.currentTurn = gameInfo.startingPlayer;
+            document.getElementById("startingPlayer-btn").innerText = "TacStack AI";
         } else {
-            document.getElementById("startingPlayer-btn").innerText = gameInfo.playerTwoName;
             gameInfo.startingPlayer = 2;
-            gameInfo.currentTurn = gameInfo.startingPlayer;
+            document.getElementById("startingPlayer-btn").innerText = gameInfo.playerTwoName;
         }
     } else {
-        document.getElementById("startingPlayer-btn").innerText = gameInfo.playerOneName;
         gameInfo.startingPlayer = 1;
+        document.getElementById("startingPlayer-btn").innerText = gameInfo.playerOneName;
     }
-})
+    gameInfo.currentTurn = gameInfo.startingPlayer;
+    turnUpdate();
+});
 
-document.getElementById("playerOneName-input").addEventListener(("input"), (e) => {
-    if (gameInfo.startingPlayer === 1) {
-        if (e.target.value.length === 0 || e.target.value.length > 20) {
-            gameInfo.playerOneName = "Player 1";
-            document.getElementById("startingPlayer-btn").innerText = gameInfo.playerOneName;
-        } else {
-            gameInfo.playerOneName = e.target.value;
-            document.getElementById("startingPlayer-btn").innerText = gameInfo.playerOneName;
-        }
-    } else {
-        if (e.target.value.length === 0 || e.target.value.length > 20) {
-            gameInfo.playerOneName = "Player 1";
-        } else {
-            gameInfo.playerOneName = e.target.value;
-        }
-    }
-})
+// Player name inputs
+document.getElementById("playerOneName-input").addEventListener("input", (e) => {
+    gameInfo.playerOneName = e.target.value.trim() || "Player 1";
+    if (gameInfo.startingPlayer === 1) document.getElementById("startingPlayer-btn").innerText = gameInfo.playerOneName;
+    turnUpdate();
+});
 
-document.getElementById("playerTwoName-input").addEventListener(("input"), (e) => {
-    if (gameInfo.startingPlayer === 2) {
-        if (e.target.value.length === 0 || e.target.value.length > 20) {
-            gameInfo.playerTwoName = "Player 2";
-            document.getElementById("startingPlayer-btn").innerText = gameInfo.playerTwoName;
-        } else {
-            gameInfo.playerTwoName = e.target.value;
-            document.getElementById("startingPlayer-btn").innerText = gameInfo.playerTwoName;
-        }
-    } else {
-        if (e.target.value.length === 0 || e.target.value.length > 20) {
-            gameInfo.playerTwoName = "Player 2";
-        } else {
-            gameInfo.playerTwoName = e.target.value;
-        }
-    }
-})
+document.getElementById("playerTwoName-input").addEventListener("input", (e) => {
+    gameInfo.playerTwoName = e.target.value.trim() || "Player 2";
+    if (gameInfo.startingPlayer === 2) document.getElementById("startingPlayer-btn").innerText = gameInfo.playerTwoName;
+    turnUpdate();
+});
 
+// Overlay function
 function showOverlay(state, title, msg, btn) {
     game.style.display = "none";
     overlay.style.display = "block";
-    document.getElementById("overlay-button-secondary").style.display = "none";
     document.getElementById("overlay-title").innerText = title;
     document.getElementById("overlay-text").innerText = msg;
+
+    const primaryBtn = document.getElementById("overlay-button-primary");
+    const secondaryBtn = document.getElementById("overlay-button-secondary");
+
+    primaryBtn.innerText = btn || "Okay";
+    secondaryBtn.style.display = "none";
+
     if (state === "start") {
-        document.getElementById("overlay-button-secondary").style.display = "inline-block";
-        document.getElementById("overlay-button-secondary").innerText = "Change Settings";
+        secondaryBtn.style.display = "inline-block";
+        secondaryBtn.innerText = "Change Settings";
     }
-    if (!btn) {
-        document.getElementById("overlay-button-primary").innerText = "Okay"
-    } else {
-        document.getElementById("overlay-button-primary").innerText = btn;
-    }
-    document.getElementById("overlay-button-primary").addEventListener(("click"), () => {
+
+    // Remove previous listeners
+    primaryBtn.replaceWith(primaryBtn.cloneNode(true));
+    secondaryBtn.replaceWith(secondaryBtn.cloneNode(true));
+
+    const newPrimaryBtn = document.getElementById(primaryBtn.id);
+    const newSecondaryBtn = document.getElementById(secondaryBtn.id);
+
+    newPrimaryBtn.addEventListener("click", () => {
         if (state === "start") {
             overlay.style.display = "none";
             game.style.display = "flex";
@@ -147,137 +119,104 @@ function showOverlay(state, title, msg, btn) {
         } else {
             overlay.style.display = "none";
         }
-    })
-    document.getElementById("overlay-button-secondary").addEventListener(("click"), () => {
+    });
+
+    newSecondaryBtn.addEventListener("click", () => {
         if (state === "start") {
             overlay.style.display = "none";
             settings.style.display = "block";
         }
-    })
+    });
 }
 
+// Claim a cell
 function claimBox(id) {
-    if (gameInfo.firstTurn) {
-        gameInfo.firstTurn = false;
-        if (gameInfo.currentTurn === 1) {
-            document.getElementById(id).innerText = "X";
-            Object.defineProperty(field, id, { value: "X" });
+    if (field[id] !== null || gameInfo.currentTurn === 0) return;
 
-            if (gameInfo.aiEnemy === true) {
-                setTimeout(() => aiTurn(), 2000);
-            }
-        } else {
-            document.getElementById(id).innerText = "O";
-            Object.defineProperty(field, id, { value: "O" });
-        }
-    } else {
-        if (field[id] === null && gameInfo.currentTurn !== 0) {
-            if (gameInfo.currentTurn === 1) {
-                document.getElementById(id).innerText = "X";
-                Object.defineProperty(field, id, { value: "X" });
+    const mark = gameInfo.currentTurn === 1 ? "X" : "O";
+    document.getElementById(id).innerText = mark;
+    field[id] = mark;
 
-                if (gameInfo.aiEnemy === true) {
-                setTimeout(() => aiTurn(), 2000);
-            }
-            } else {
-                document.getElementById(id).innerText = "O";
-                Object.defineProperty(field, id, { value: "O" });
-            }
-        }
-    }
+    checkWin();
 
-    if (checkWin() === false && gameInfo.aiEnemy === false) {
-        if (gameInfo.currentTurn === 1) {
-            gameInfo.currentTurn = 2;
-            turnUpdate();
-        } else {
-            gameInfo.currentTurn = 1;
-            turnUpdate();
-        }
+    if (gameInfo.aiEnemy && gameInfo.currentTurn === 1) {
+        gameInfo.currentTurn = 0;
+        turnUpdate();
+        setTimeout(aiTurn, 1000); // small delay
+    } else if (!gameInfo.aiEnemy) {
+        gameInfo.currentTurn = gameInfo.currentTurn === 1 ? 2 : 1;
+        turnUpdate();
     }
 }
 
+// AI turn
 function aiTurn() {
-    gameInfo.currentTurn = 0;
-    turnUpdate();
+    const emptyCells = Object.keys(field).filter(key => field[key] === null);
+    if (emptyCells.length === 0) return;
 
-    
+    const choice = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+    document.getElementById(choice).innerText = "O";
+    field[choice] = "O";
 
     gameInfo.currentTurn = 1;
+    turnUpdate();
+
+    checkWin();
 }
 
+// Check win or tie
 function checkWin() {
-    if (field[11] && field[12] && field[13] === "X" || field[11] && field[12] && field[13] === "O") {
-        showWinMsg();
-        return true;
-    } else if (field[21] && field[22] && field[23] === "X" || field[21] && field[22] && field[23] === "O") {
-        showWinMsg();
-        return true;
-    } else if (field[31] && field[32] && field[33] === "X" || field[31] && field[32] && field[33] === "O") {
-        showWinMsg();
-        return true;
-    } else if (field[11] && field[21] && field[31] === "X" || field[11] && field[21] && field[31] === "O") {
-        showWinMsg();
-        return true;
-    } else if (field[12] && field[22] && field[32] === "X" || field[12] && field[22] && field[32] === "O") {
-        showWinMsg();
-        return true;
-    } else if (field[13] && field[23] && field[33] === "X" || field[13] && field[23] && field[33] === "O") {
-        showWinMsg();
-        return true;
-    } else if (field[11] && field[22] && field[33] === "X" || field[11] && field[22] && field[33] === "O") {
-        showWinMsg();
-        return true;
-    } else if (field[13] && field[22] && field[31] === "X" || field[13] && field[22] && field[31] === "O") {
-        showWinMsg();
-        return true;
-    } else {
-        return false;
+    const wins = [
+        [11,12,13],[21,22,23],[31,32,33],
+        [11,21,31],[12,22,32],[13,23,33],
+        [11,22,33],[13,22,31]
+    ];
+
+    for (const [a,b,c] of wins) {
+        if (field[a] && field[a] === field[b] && field[a] === field[c]) {
+            return showWinMsg(field[a]);
+        }
+    }
+
+    if (Object.values(field).every(v => v !== null)) {
+        showOverlay("end", "We have a tie!", "Congratulations to the both of you for having fun! Want to try again?", "Try again!");
+        resetGame();
     }
 }
 
-function showWinMsg() {
+function showWinMsg(winnerMark) {
     resetGame();
-    if (gameInfo.currentTurn === 1) {
+    if (winnerMark === "X") {
         showOverlay("end", "We have a winner!", `Congratulations, ${gameInfo.playerOneName}! You won!`);
-    } else if (gameInfo.currentTurn === 2) {
-        showOverlay("end", "We have a winner!", `Congratulations, ${gameInfo.playerTwoName}! You won!`);
-    } else {
+    } else if (winnerMark === "O" && gameInfo.aiEnemy) {
         showOverlay("end", "You lost!", "The TacStack AI won! Good luck next time!");
+    } else {
+        showOverlay("end", "We have a winner!", `Congratulations, ${gameInfo.playerTwoName}! You won!`);
     }
 }
 
+// Update current turn text
 function turnUpdate() {
-    document.getElementById("turn").innerText = `Current Turn: ${turnNumToPlayer(gameInfo.currentTurn)}`;
+    const turnText = document.getElementById("turn");
+    turnText.innerText = `Current Turn: ${turnNumToPlayer(gameInfo.currentTurn)}`;
 }
 
 function turnNumToPlayer(num) {
-    if (num === 0) {
-        return "TacStack AI";
-    } else if (num === 1) {
-        return gameInfo.playerOneName;
-    } else {
-        return gameInfo.playerTwoName;
-    }
+    if (num === 0) return "TacStack AI";
+    if (num === 1) return gameInfo.playerOneName;
+    return gameInfo.playerTwoName;
 }
 
+// Reset the game state
 function resetGame() {
-    field = {
-        11: null,
-        12: null,
-        13: null,
-        21: null,
-        22: null,
-        23: null,
-        31: null,
-        32: null,
-        33: null
-    };
-
+    for (const key in field) field[key] = null;
     for (let i = 1; i <= 3; i++) {
         for (let j = 1; j <= 3; j++) {
-            let id = i * 10 + j;
+            const id = i*10+j;
             document.getElementById(id).innerText = "";
         }
     }
+    gameInfo.firstTurn = true;
+    gameInfo.currentTurn = gameInfo.startingPlayer;
+    turnUpdate();
 }
